@@ -10,11 +10,9 @@
 #include <memory> // Para shared_ptr
 #include <omp.h>
 
-
-
 using namespace std;
 
-// Función para ejecutar un comando de terminal y capturar su salida
+// Función para ejecutar un comando y capturar su salida, imprimiéndola directamente
 string runCommand(const string &command) {
     array<char, 128> buffer;
     string result;
@@ -26,67 +24,13 @@ string runCommand(const string &command) {
         return "";
     }
 
+    // Leer la salida del comando y mostrarla en tiempo real
     while (fgets(buffer.data(), buffer.size(), cmdPipe.get()) != nullptr) {
-        result += buffer.data();
+        cout << buffer.data(); // Imprimir en consola
+        result += buffer.data(); // Guardar en la cadena result
     }
 
     return result;
-}
-
-// Función para medir el tiempo de ejecución de un comando
-double measureExecutionTime(const string &command) {
-    auto start = chrono::high_resolution_clock::now();
-    runCommand(command);
-    auto end = chrono::high_resolution_clock::now();
-    return chrono::duration<double>(end - start).count();
-}
-
-// Función para generar un benchmark entre CPU y GPU
-void CPU_vs_GPU(int n, int nt) {
-    vector<pair<int, double>> cpuTimes;
-    vector<pair<int, double>> gpuTimes;
-
-    // Número de repeticiones por tamaño de entrada
-    int repetitions = 100;
-
-    cout << endl << endl << "Benchmarking CPU vs GPU..." << endl;
-    cout << "Numero de pruebas: " << repetitions << endl;
-
-    for (int i = 1000; i <= n; i *= 2) {
-        double cpuTime = 0.0, gpuTime = 0.0;
-
-        for (int j = 0; j < repetitions; ++j) {
-            // Medir tiempo para CPU
-            cpuTime += measureExecutionTime("./main_cpu " + to_string(i) + " " + to_string(nt));
-
-            // Medir tiempo para GPU
-            gpuTime += measureExecutionTime("./main_cuda " + to_string(i) + " " + to_string(nt));
-        }
-
-        // Promediar tiempos
-        cpuTime /= repetitions;
-        gpuTime /= repetitions;
-
-        cpuTimes.emplace_back(i, cpuTime);
-        gpuTimes.emplace_back(i, gpuTime);
-
-        cout << "n=" << i << " | CPU: " << cpuTime << "s, GPU: " << gpuTime << "| Repeticiones: " << repetitions << "s\n";
-    }
-
-    // Guardar resultados en archivos CSV
-    ofstream cpuFile("cpu_vs_gpu_cpu.csv"), gpuFile("cpu_vs_gpu_gpu.csv");
-    cpuFile << "n,Time(s)\n";
-    gpuFile << "n,Time(s)\n";
-
-    for (size_t k = 0; k < cpuTimes.size(); ++k) {
-        cpuFile << cpuTimes[k].first << "," << cpuTimes[k].second << "\n";
-        gpuFile << gpuTimes[k].first << "," << gpuTimes[k].second << "\n";
-    }
-
-    cpuFile.close();
-    gpuFile.close();
-
-    cout << "Results saved to cpu_vs_gpu_cpu.csv and cpu_vs_gpu_gpu.csv\n";
 }
 
 int main(int argc, char **argv) {
@@ -106,29 +50,18 @@ int main(int argc, char **argv) {
 
     string program;
 
-    if(modo == 0) {
+    if (modo == 0) {
         program = "./main_cpu";
         cout << "CPU mode selected\n";
         cout << "Executing CPU mode...\n";
+        runCommand(program + " " + to_string(n) + " " + to_string(nt));
     } else {
         program = "./main_cuda";
         cout << "GPU mode selected\n";
         cout << "Executing GPU mode...\n";
+        runCommand(program + " " + to_string(n) + " " + to_string(nt));
     }
 
-    // Construir el comando
-    ostringstream command;
-    command << program << " " << n << " " << nt;
-
-    // Medir tiempo de ejecución
-    double elapsed = measureExecutionTime(command.str());
-    cout << "Execution time: " << elapsed << " seconds\n";
-
-
-    cout << "\n==============================================\n";
-
-    // Realizar benchmarks
-    CPU_vs_GPU(n, nt);
-
+    cout << "\n===============================================\n";
     return 0;
 }

@@ -83,13 +83,17 @@ void mergeSort(vector<int> &data, int left, int right, int depth = 0) {
 
 void ejecutarPruebas(int n, int nt) {
     vector<double> tiempos;  // Para almacenar los tiempos de ejecución
+    double tiempo = 0;
     vector<int> nValues;  // Para almacenar los valores de n
-    for(int j = 100 ; j <= n; j *= 2){
+    vector<int> tiemposPromedio;
+    vector<int> valoresN = {100, 1000, 10000, 100000, 1000000, 10000000};
+    for(int j = 0 ; j < valoresN.size(); j++){
+        n = valoresN[j];
         for (int i = 0; i < 100; i++) {
             // Generar los datos aleatorios para cada ejecución
             vector<int> data(n);
-            for (int j = 0; j < n; ++j) {
-                data[j] = rand() % 100;  // Puedes cambiar el rango si es necesario
+            for (int z = 0; z < n; ++z) {
+                data[z] = rand() % 100;  // Puedes cambiar el rango si es necesario
             }
 
             // Iniciar el temporizador para esta ejecución
@@ -105,14 +109,14 @@ void ejecutarPruebas(int n, int nt) {
             // Detener el temporizador y sumar el tiempo de ejecución
             auto end = omp_get_wtime();
             double execTime = end - start;  // Tiempo de ejecución de esta iteración
-            tiempos.push_back(execTime);  // Acumular el tiempo
-            nValues.push_back(n);  // Acumular el valor de n
-
-            // cout << "Tiempo de ejecución de la iteración " << i + 1 << ": " << execTime << " segundos.\n";
+            tiempo += execTime;
+            //tiempos.push_back(execTime);  // Acumular el tiempo
         }
+        tiempos.push_back(tiempo/100);
+        nValues.push_back(n);
     }
     // Guardar los resultados en un archivo CSV
-    string nombreArchivo = "pruebas/resultados_tiempos.csv";
+    string nombreArchivo = "pruebas/tiempos_vs_n_openmp.csv";
     guardarResultadosCSV(nombreArchivo, tiempos, nValues);
     cout << "Resultados guardados en: " << nombreArchivo << "\n";
 }
@@ -181,7 +185,7 @@ void calcularYGuardarSpeedupEficiencia(int n, int maxThreads) {
     }
 
     // Guardar los resultados en un archivo CSV
-    string nombreArchivo = "pruebas/speedup_eficiencia.csv";
+    string nombreArchivo = "pruebas/speedup_eficiencia_openmp.csv";
     ofstream file(nombreArchivo, ios::out | ios::app);
     if (file.is_open()) {
         file << "Threads,Speedup,Eficiencia\n"; // Encabezado
@@ -243,8 +247,11 @@ int main(int argc, char **argv) {
     cout << "\n\n";
     cout << "Tiempo de ejecucion mergeSort: " << end - start << "s\n";
 
+
+    //Pruebas benchmark
+
     //ejecutarPruebas(1000000, 12); //el primer valor es el n y el segundo threads (colocar threads segun pc)
-    calcularYGuardarSpeedupEficiencia(100000, 12); //lo mismo que el anterior (colocar threads segun pc)
+    //calcularYGuardarSpeedupEficiencia(100000, 12); //lo mismo que el anterior (colocar threads segun pc)
 
 
     return 0;

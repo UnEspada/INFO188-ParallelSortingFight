@@ -1,34 +1,36 @@
-# Makefile para compilar y ejecutar el programa de comparación entre Bitonic Sort y Merge Sort
-
-# Compiladores
-NVCC = nvcc
+# Variables de compilación
 CXX = g++
-
-# Flags de compilación
+NVCC = nvcc
 CXXFLAGS = -O3 -fopenmp
-NVFLAGS = -O3 -arch=sm_60
+NVCCFLAGS = -std=c++11
 
-# Archivos
-TARGET = prog
-OBJ_CUDA = main_cuda.o
-OBJ_CPP = main_cpu.o
+# Archivos fuente y ejecutables
+CPU_SRC = main_cpu.cpp
+CUDA_SRC = main_cuda.cu
+MAIN_SRC = main.cpp
+CPU_EXE = main_cpu
+CUDA_EXE = main_cuda
+MAIN_EXE = main
 
-# Regla principal
-all: $(TARGET)
+# Regla por defecto
+all: $(CPU_EXE) $(CUDA_EXE) $(MAIN_EXE)
 
-$(OBJ_CUDA): main_cuda.cu
-	$(NVCC) -c main_cuda.cu $(NVFLAGS) -o $(OBJ_CUDA)
+# Compilar main_cpu
+$(CPU_EXE): $(CPU_SRC)
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
-$(OBJ_CPP): main_cpu.cpp
-	$(CXX) -c main_cpu.cpp $(CXXFLAGS) -o $(OBJ_CPP)
+# Compilar main_cuda
+$(CUDA_EXE): $(CUDA_SRC)
+	$(NVCC) $(NVCCFLAGS) -o $@ $<
 
-$(TARGET): $(OBJ_CUDA) $(OBJ_CPP)
-	$(CXX) $(OBJ_CUDA) $(OBJ_CPP) $(CXXFLAGS) -o $(TARGET)
+# Compilar main
+$(MAIN_EXE): $(MAIN_SRC)
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
-# Limpiar archivos generados
-clean:
-	rm -f $(TARGET) *.o *.csv
+# Limpieza de los ejecutables
+tidy:
+	rm -f $(CPU_EXE) $(CUDA_EXE) $(MAIN_EXE)
 
-# Uso del programa
-run:
-	./$(TARGET) 1000000 0 8 # Cambiar parámetros según necesidad
+# Limpieza completa
+clean: tidy
+	rm -rf *.o
